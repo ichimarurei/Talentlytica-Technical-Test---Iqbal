@@ -1,38 +1,65 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
-
-const NameWithIcon = ({ name }: { name: string }) => (
-  <div className="flex items-center p-4 rounded-lg shadow-md">
-    <div className="flex items-center justify-center w-9 h-9 bg-gray-300 dark:bg-gray-400 rounded-full">
-      <svg
-        className="w-6 h-6 text-black dark:text-gray-700"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm0 2c-5 0-8 2.5-8 5v1h16v-1c0-2.5-3-5-8-5z" />
-      </svg>
-    </div>
-    <span className="ml-4 text-black dark:text-gray-100">{name}</span>
-  </div>
-);
+import Button from "@/components/Button";
+import IconLabel from "@/components/IconLabel";
+import JsonViewer from "@/components/JsonViewer";
+import Select from "@/components/Select";
+import React, { useMemo, useState } from "react";
 
 export default function Home() {
-  const [names, setNames] = useState<string[]>([]);
+  const [selectedOptions, setSelectedOptions] = useState<{
+    [key: string]: string[] | number[];
+  }>({
+    std1: [1, 1, 1, 1],
+    std2: [1, 1, 1, 1],
+    std3: [1, 1, 1, 1],
+    std4: [1, 1, 1, 1],
+    std5: [1, 1, 1, 1],
+    std6: [1, 1, 1, 1],
+    std7: [1, 1, 1, 1],
+    std8: [1, 1, 1, 1],
+    std9: [1, 1, 1, 1],
+    std10: [1, 1, 1, 1],
+  });
+  const [result, setResult] = useState<any | null>(null);
 
-  useEffect(() => {
+  const setOptions = (
+    student: number,
+    aspect: number,
+    value: string | number
+  ) => {
+    const currentVals = selectedOptions[`std${student + 1}`];
+    currentVals[aspect] = value;
+
+    setSelectedOptions({
+      ...selectedOptions,
+      [`std${student + 1}`]: currentVals,
+    });
+  };
+
+  const names = useMemo(() => {
     const students = [];
 
     for (let at = 1; at <= 10; at++) {
       students.push(`Mahasiswa ${at}`);
     }
 
-    setNames(students);
+    return students;
+  }, []);
+
+  const options = useMemo(() => {
+    const aspects: { value: string | number; label: string }[] = [];
+
+    for (let at = 1; at <= 10; at++) {
+      aspects.push({ value: at, label: String(at) });
+    }
+
+    return aspects;
   }, []);
 
   return (
-    <div className="grid grid-flow-row-dense grid-cols-5 grid-rows-3 gap-4 p-10">
+    <div className="grid grid-flow-row-dense grid-cols-5 grid-rows-3 gap-4 p-10 min-h-screen">
       <div className="col-span-5 text-2xl text-center">
         Aplikasi Penilaian Mahasiswa
       </div>
@@ -49,15 +76,81 @@ export default function Home() {
       <div className="text-center">
         Aspek <br /> Penilaian 4
       </div>
-      {names.map((name) => (
-        <>
-          <NameWithIcon name={name} />
-          <div className="bg-purple-500">01</div>
-          <div className="bg-purple-500">02</div>
-          <div className="bg-purple-500">03</div>
-          <div className="bg-purple-500">04</div>
-        </>
+      {names.map((name, at) => (
+        <React.Fragment key={name}>
+          <IconLabel name={name} />
+          <div className="max-w-md p-6 space-y-4">
+            <Select
+              options={options}
+              value={selectedOptions[`std${at + 1}`][0]}
+              onChange={(value) => setOptions(at, 0, value)}
+            />
+          </div>
+          <div className="max-w-md p-6 space-y-4">
+            <Select
+              options={options}
+              value={selectedOptions[`std${at + 1}`][1]}
+              onChange={(value) => setOptions(at, 1, value)}
+            />
+          </div>
+          <div className="max-w-md p-6 space-y-4">
+            <Select
+              options={options}
+              value={selectedOptions[`std${at + 1}`][2]}
+              onChange={(value) => setOptions(at, 2, value)}
+            />
+          </div>
+          <div className="max-w-md p-6 space-y-4">
+            <Select
+              options={options}
+              value={selectedOptions[`std${at + 1}`][3]}
+              onChange={(value) => setOptions(at, 3, value)}
+            />
+          </div>
+        </React.Fragment>
       ))}
+      <div className="col-span-5 p-6">
+        <JsonViewer data={result} />
+      </div>
+      <div className="col-span-5 text-2xl text-right p-6">
+        <Button
+          onClick={() => {
+            // define data result
+            const data: { [key: string]: { [key: string]: string | number } } =
+              {
+                aspek_penilaian_1: {},
+                aspek_penilaian_2: {},
+                aspek_penilaian_3: {},
+                aspek_penilaian_4: {},
+              };
+
+            // assign default value (1)
+            for (let at = 0; at < names.length; at++) {
+              data.aspek_penilaian_1[`mahasiswa_${at + 1}`] = 1;
+              data.aspek_penilaian_2[`mahasiswa_${at + 1}`] = 1;
+              data.aspek_penilaian_3[`mahasiswa_${at + 1}`] = 1;
+              data.aspek_penilaian_4[`mahasiswa_${at + 1}`] = 1;
+            }
+
+            // set value from selected aspects
+            for (const key in selectedOptions) {
+              data.aspek_penilaian_1[key.replace("std", "mahasiswa_")] =
+                selectedOptions[key][0];
+              data.aspek_penilaian_2[key.replace("std", "mahasiswa_")] =
+                selectedOptions[key][1];
+              data.aspek_penilaian_3[key.replace("std", "mahasiswa_")] =
+                selectedOptions[key][2];
+              data.aspek_penilaian_4[key.replace("std", "mahasiswa_")] =
+                selectedOptions[key][3];
+            }
+
+            setResult(data);
+          }}
+          variant="reverse"
+        >
+          Simpan
+        </Button>
+      </div>
     </div>
   );
 }
